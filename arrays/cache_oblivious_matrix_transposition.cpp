@@ -1,5 +1,4 @@
 #include <iostream>
-#include <algorithm>
 
 void swap(long long int * __restrict__ a, long long int *__restrict__ b){
     int temp = *a;
@@ -27,7 +26,7 @@ long long int* cache_oblivious_transpose(long long int *A, int M, int N){
 
 long long int* reverse_columns(long long int *A, int M, int N){
 
-  int BLOCK_SIZE = 64;
+  int BLOCK_SIZE = 128;
   int column_flip_size = (N%2 == 0) ? N/2 : (N/2) + 1;
 
   for(unsigned i=0; i<M; i+=BLOCK_SIZE)
