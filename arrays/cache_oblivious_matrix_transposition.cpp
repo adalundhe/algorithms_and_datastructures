@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctime>
 
 void swap(long long int * __restrict__ a, long long int *__restrict__ b){
     int temp = *a;
@@ -41,6 +42,9 @@ long long int* reverse_columns(long long int *A, int M, int N){
 
 int main(){
 
+  std::clock_t start;
+  double duration;
+
   int M = 12288;
   int N = 12288;
   long long int *A = (long long int*)malloc(sizeof(long long int) * M * N);
@@ -49,10 +53,15 @@ int main(){
     A[i] = i;
 
 
+  start = std::clock();
   long long int* result = cache_oblivious_transpose(A, M,N);
 
   // Also added column reversal to rotate the matrix.
   result = reverse_columns(result, M, N);
+
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+  std::cout<<"Time: "<< duration <<" seconds.\n";
 
   // for(unsigned i=M-5; i<M; ++i){
   //     for(unsigned j=N-5; j<N; ++j)
