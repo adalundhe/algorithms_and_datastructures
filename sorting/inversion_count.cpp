@@ -22,7 +22,7 @@ int Merge(int *A,int *L,int leftCount,int *R,int rightCount) {
 		}
 		else{
 		  A[k++] = R[j++];
-		  
+
 		  inversion_count = inversion_count + (leftCount - i);
 		}
 	}
@@ -34,7 +34,7 @@ int Merge(int *A,int *L,int leftCount,int *R,int rightCount) {
 
 int MergeSort(int *A,int n) {
 
-	int SWITCH_SORT_SIZE = 64; 
+	int SWITCH_SORT_SIZE = 64;
 	int mid,i;
 	if(n < 2) return 0;
 
@@ -42,8 +42,8 @@ int MergeSort(int *A,int n) {
 
 	mid = n/2;
 
-	int L[mid], R[n- mid];  
-	
+	int L[mid], R[n- mid];
+
 	for(i = 0;i<mid;i++) L[i] = A[i];
 	for(i = mid;i<n;i++) R[i-mid] = A[i];
 
@@ -77,9 +77,9 @@ int main() {
 
 	unsigned long int inversion_count = MergeSort(arr, n);
 
-        std::cout<<"COUNT: "<<inversion_count<<std::endl;	
+        std::cout<<"COUNT: "<<inversion_count<<std::endl;
 
-	//return_result(arr, n);       
+	//return_result(arr, n);
 
 	return 0;
 }

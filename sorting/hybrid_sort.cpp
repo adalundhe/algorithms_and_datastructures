@@ -14,23 +14,23 @@ void swap(int *a, int *b){
 }
 
 void selection_sort(int arr[], int array_size){
-    
+
     int i;
-    
+
     int iters = array_size;
 
-    
+
     for(i=0; i<iters-1; i++){
-        
+
         int min_index = i;
-        
+
         for(int j = i + 1; j<iters; j++)
             if(arr[min_index] > arr[j])
                 min_index = j;
-                
+
         swap(&arr[min_index], &arr[i]);
     }
-    
+
 }
 
 void Merge(int *A,int *L,int leftCount,int *R,int rightCount) {
@@ -51,14 +51,14 @@ void Merge(int *A,int *L,int leftCount,int *R,int rightCount) {
 
 void MergeSort(int *A,int n) {
 
-	int SWITCH_SORT_SIZE = 64; 
+	int SWITCH_SORT_SIZE = 64;
 	int mid,i;
 	if(n < 2) return;
 
 	mid = n/2;
 
-	int L[mid], R[n- mid];  
-	
+	int L[mid], R[n- mid];
+
 	for(i = 0;i<mid;i++) L[i] = A[i];
 	for(i = mid;i<n;i++) R[i-mid] = A[i];
 
@@ -93,9 +93,9 @@ int main() {
 
 	create_data(arr,n);
 
-	MergeSort(arr, n);	
+	MergeSort(arr, n);
 
-	return_result(arr, n);       
+	return_result(arr, n);
 
 	return 0;
 }
