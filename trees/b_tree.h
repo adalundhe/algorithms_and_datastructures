@@ -11,6 +11,16 @@ class BTreeNode{
     virtual BTreeNode<T>* search(T query);
     void insert_non_full_node(T data);
     void split_child(int index, BTreeNode<T> *node);
+    int find_key(T query);
+    void remove(T query);
+    void remove_from_leaf(T idx);
+    void remove_from_nonleaf(T idx);
+    T get_predecessor(T idx);
+    T get_successor(T idx);
+    void fill(T idx);
+    void borrow_from_prev(T idx);
+    void borrow_from_next(T idx);
+    void merge(T idx);
     T *keys;
     BTreeNode<T> **children;
     int minimum_degree;
@@ -25,6 +35,7 @@ class BTree{
     void traverse();
     BTreeNode<T>* search(T query);
     void insert(T data);
+    void remove(T query);
   private:
     BTreeNode<T> *root;
     int minimum_degree;
@@ -41,6 +52,180 @@ BTreeNode<T>::BTreeNode(int initial_min_degree, bool node_is_leaf){
 
   current_key_count = 0;
 
+}
+
+template <typename T>
+int BTreeNode<T>::find_key(T query){
+
+  int idx = 0;
+
+  while(idx<current_key_count && keys[idx] < query)
+    ++idx;
+  return idx;
+}
+
+template <typename T>
+void BTreeNode<T>::remove(T query){
+
+  int idx = find_key(query);
+
+  if(idx < current_key_count && keys[idx] == query){
+    if(is_leaf)
+      remove_from_leaf(idx);
+    else
+      remove_from_nonleaf(idx);
+  }
+  else{
+    if(is_leaf)
+      return;
+    bool removal_flag = (idx==current_key_count) ? true: false;
+
+    if(children[idx]->current_key_count < minimum_degree)
+      fill(idx);
+    if(removal_flag && idx > current_key_count)
+      children[idx-1]->remove(query);
+    else
+      children[idx]->remove(query);
+  }
+
+  return;
+}
+
+template <typename T>
+void BTreeNode<T>::remove_from_leaf(T idx){
+  for(int i=idx+1; i<current_key_count; ++i)
+    keys[i-1] = keys[i];
+  current_key_count--;
+  return;
+}
+
+template <typename T>
+void BTreeNode<T>::remove_from_nonleaf(T idx){
+
+  T selected_key = keys[idx];
+
+  if(children[idx]->current_key_count >= minimum_degree){
+    T predecessor_idx = get_predecessor(idx);
+    keys[idx] = predecessor_idx;
+    children[idx]->remove(predecessor_idx);
+  }
+  else if(children[idx+1]->current_key_count >= minimum_degree){
+    T successor_idx = get_successor(idx);
+    keys[idx] = successor_idx;
+    children[idx+1]->remove(successor_idx);
+  }
+  else{
+    merge(idx);
+    children[idx]->remove(selected_key);
+  }
+  return;
+}
+
+template <typename T>
+T BTreeNode<T>::get_predecessor(T idx){
+  BTreeNode<T> *current = children[idx];
+  while(current->is_leaf == false)
+    current = current->children[current->current_key_count];
+
+  return current->keys[current->current_key_count-1];
+}
+
+template <typename T>
+T BTreeNode<T>::get_successor(T idx){
+  BTreeNode<T> *current = children[idx+1];
+  while(current->is_leaf == false)
+    current = current->children[0];
+  return current->keys[0];
+}
+
+template <typename T>
+void BTreeNode<T>::fill(T idx){
+  if(idx != 0 && children[idx-1]->current_key_count >= minimum_degree)
+    borrow_from_prev(idx);
+  else if(idx != current_key_count && children[idx+1]->current_key_count >= minimum_degree)
+    borrow_from_next(idx);
+  else{
+    if(idx != current_key_count)
+      merge(idx);
+    else
+      merge(idx-1);
+  }
+  return;
+}
+
+template <typename T>
+void BTreeNode<T>::borrow_from_prev(T idx){
+  BTreeNode<T> *child = children[idx];
+  BTreeNode<T> *sibling = children[idx-1];
+
+  for(int i=child->current_key_count-1; i>=0; --i)
+    child->keys[i+1] = child->keys[i];
+
+  child->keys[0] = keys[idx-1];
+
+  if(child->is_leaf == false)
+    child->children[0] = sibling->children[sibling->current_key_count];
+
+  keys[idx-1] = sibling->keys[sibling->current_key_count-1];
+
+  child->current_key_count++;
+  sibling->current_key_count--;
+
+  return;
+}
+
+template <typename T>
+void BTreeNode<T>::borrow_from_next(T idx){
+
+  BTreeNode<T> *child = children[idx];
+  BTreeNode<T> *sibling = children[idx+1];
+
+  child->keys[child->current_key_count] = keys[idx];
+
+  if(child->is_leaf == false)
+    child->children[child->current_key_count + 1] = sibling->children[0];
+
+  keys[idx] = sibling->keys[0];
+
+  for(int i=1; i<sibling->current_key_count; ++i)
+    sibling->keys[i-1] = sibling->keys[i];
+
+  if(sibling->is_leaf == false)
+    for(int i=1; i<=sibling->current_key_count; ++i)
+      sibling->children[i-1] = sibling->children[i];
+
+  child->current_key_count++;
+  sibling->current_key_count--;
+
+  return;
+}
+
+template <typename T>
+void BTreeNode<T>::merge(T idx){
+
+  BTreeNode<T> *child = children[idx];
+  BTreeNode<T> *sibling = children[idx+1];
+
+  child->keys[minimum_degree-1] = keys[idx];
+
+  for(unsigned i=0; i<sibling->current_key_count; ++i)
+    child->keys[i+minimum_degree] = sibling->keys[i];
+
+  if(child->is_leaf == false)
+    for(unsigned i=0; i<=sibling->current_key_count; ++i)
+      child->children[i+minimum_degree] = sibling->children[i];
+
+  for(unsigned i=idx+1; i<current_key_count; ++i)
+    keys[i-1] = keys[i];
+
+  for(unsigned i=idx+2; i<=current_key_count; ++i)
+    children[i-1] = children[i];
+
+  child->current_key_count += sibling->current_key_count + 1;
+  current_key_count--;
+
+  delete(sibling);
+  return;
 }
 
 template <typename T>
@@ -180,6 +365,27 @@ void BTree<T>::insert(T data){
       root->insert_non_full_node(data);
     }
   }
+
+}
+
+template <typename T>
+void BTree<T>::remove(T query){
+
+  if(root == nullptr)
+    return;
+
+  root->remove(query);
+
+  if(root->current_key_count == 0){
+    BTreeNode<T> *temp = root;
+    if(root->is_leaf)
+      root = nullptr;
+    else
+      root = root->children[0];
+
+    delete temp;
+  }
+  return;
 
 }
 
